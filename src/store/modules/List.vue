@@ -9,37 +9,37 @@
       <v-col cols="4" lg="4">
         <img alt="Vue logo" cols="4" lg="4" src="@/assets/list.png" />
       </v-col>
-      <v-col cols="4" lg="4"></v-col>>
+      <v-col cols="4" lg="4"></v-col>
     </v-row>
-    <v-app>
-      <v-data-table
-        :headers="headers"
-        :items="customers"
-        :items-per-page="5"
-        class="elevation-1"
-        hide-default-footer
-        :pagination.sync="pagination"
-        show-select
-        @click:row="detail"
-      >
-        <template slot="items" slot-scope="props">
-          <v-row v-on:click="detail(props.item)">
-            <td class="text-xs-right">{{ props.item.no }}</td>
-            <td class="text-xs-right">{{ props.item.customer_name }}</td>
-            <td class="text-xs-right">{{ props.item.sex }}</td>
-            <td class="text-xs-right">{{ props.item.age }}</td>
-            <td class="text-xs-right">{{ props.item.address }}</td>
-          </v-row>
-          <!-- </router-link> -->
-        </template>
-      </v-data-table>
-    </v-app>
+    <v-data-table
+      :headers="headers"
+      :items="customers"
+      class="elevation-1"
+      hide-default-footer
+      @click:row="detail"
+    >
+      <template slot="items" slot-scope="props">
+        <v-row v-on:click="detail(props.item)">
+          <td class="text-xs-right">{{ props.item.no }}</td>
+          <td class="text-xs-right">{{ props.item.customer_name }}</td>
+          <td class="text-xs-right">{{ props.item.sex }}</td>
+          <td class="text-xs-right">{{ props.item.age }}</td>
+          <td class="text-xs-right">{{ props.item.address }}</td>
+        </v-row>
+        <!-- </router-link> -->
+      </template>
+    </v-data-table>
+    <paginate :page="currentPage" :last="lastPage" v-on:childToParent="setDataFromChild" />
     <v-row></v-row>
   </v-container>
 </template>
 <script>
 import Vue from "vue";
+import paginate from "@/store/modules/paginate.vue";
 export default {
+  components: {
+    paginate
+  },
   data: () => ({
     customerCode: null,
     headers: [
@@ -76,12 +76,8 @@ export default {
     ],
     customers: [],
     dialog: false,
-    pagination: {
-      page: 2,
-      itemsPerPage: 5,
-      pageStart: 1,
-      pageStop: 2
-    }
+    lastPage: null,
+    currentPage: 0
   }),
   methods: {
     createCustomer: function() {
@@ -92,27 +88,43 @@ export default {
         name: "detail",
         params: { customerCode: customer.customer_code }
       });
+    },
+    getList: function() {
+      var pageSize = 3
+      this.$axios
+        .get(`http://localhost:8080/customer`,
+          {
+            params: {
+              size: pageSize,
+              page: 0 
+            }
+          },
+          {
+            headers: {
+              "Content-type": "application/json",
+              "Access-Control-Allow-Origin": "*"
+            }
+          }
+        )
+        .then(response => {
+          var customerTemp = response.data.customers;
+          for (let index = 0; index < customerTemp.length; index++) {
+            Vue.set(customerTemp[index], "no", index + 1);
+          }
+          this.customers = customerTemp;
+          this.lastPage = response.data.last_page;
+          this.currentPage = response.data.current_page;
+        })
+        .catch(e => {
+          this.errors.push(e);
+        });
+    },
+    setDataFromChild(value) {
+      this.customers = value;
     }
   },
   mounted() {
-    this.$axios
-      .get(`http://localhost:8080/customer`, {
-        headers: {
-          "Content-type": "application/json",
-          "Access-Control-Allow-Origin": "*"
-        }
-      })
-      .then(response => {
-        var customerTemp = response.data;
-        for (let index = 0; index < customerTemp.length; index++) {
-          Vue.set(customerTemp[index], "no", index + 1);
-        }
-        this.customers = customerTemp;
-        console.log(customerTemp);
-      })
-      .catch(e => {
-        this.errors.push(e);
-      });
+    this.getList(0);
   }
 };
 </script>
