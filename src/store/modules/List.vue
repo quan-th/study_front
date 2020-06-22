@@ -36,6 +36,7 @@
 <script>
 import Vue from "vue";
 import paginate from "@/store/modules/paginate.vue";
+import ApiService from "@/common/api.service";
 export default {
   components: {
     paginate
@@ -90,19 +91,13 @@ export default {
       });
     },
     getList: function() {
-      var pageSize = 3
-      this.$axios
-        .get(`http://localhost:8080/customer`,
+      var pageSize = 3;
+      ApiService.setHeader();
+      ApiService.get(`customer`,
           {
             params: {
               size: pageSize,
-              page: 0 
-            }
-          },
-          {
-            headers: {
-              "Content-type": "application/json",
-              "Access-Control-Allow-Origin": "*"
+              page: 0
             }
           }
         )
@@ -116,7 +111,11 @@ export default {
           this.currentPage = response.data.current_page;
         })
         .catch(e => {
-          this.errors.push(e);
+          
+          this.$router.push({
+            name: "error",
+            params: { status: e.response.status }
+          });
         });
     },
     setDataFromChild(value) {
@@ -124,7 +123,15 @@ export default {
     }
   },
   mounted() {
-    this.getList(0);
+    if (!this.currentToken) {
+      this.$router.push({ name: "login" });
+    }
+    this.getList();
+  },
+  computed: {
+    currentToken() {
+      return this.$store.state.auth.token;
+    }
   }
 };
 </script>

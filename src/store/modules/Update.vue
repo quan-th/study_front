@@ -10,7 +10,12 @@
       <v-row>
         <v-col cols="4" lg="4" style="padding:0"></v-col>
         <v-col cols="4" lg="4" style="padding:0">
-          <v-text-field v-model="customerName" :rules="nameRules" label="*Name" required>{{this.$props.customerName}}</v-text-field>
+          <v-text-field
+            v-model="customerName"
+            :rules="nameRules"
+            label="*Name"
+            required
+          >{{this.$props.customerName}}</v-text-field>
         </v-col>
       </v-row>
       <v-row>
@@ -53,43 +58,35 @@
 </template>
 
 <script>
+import ApiService from "@/common/api.service";
+
 export default {
   data: () => ({
     valid: false,
-    customerName: "",
-    number: "",
-    address: "",
     nameRules: [
       v => !!v || "Name is required",
       v => v.length <= 100 || "Name must be less than 10 characters"
     ],
-    age: "",
     ageRules: [a => (a > 0 && a <= 100) || "Age must be between 0 and 100"]
   }),
   methods: {
     updateCustomer: function() {
-      this.$axios
-        .put(
-          `http://localhost:8080/customer/`+this.$props.customerCode,
-          {
-            customer_code: this.$props.customerCode,
-            customer_name: this.customerName,
-            sex: this.sex,
-            age: this.age,
-            address: this.address
-          },
-          {
-            headers: {
-              "Content-type": "application/json",
-              "Access-Control-Allow-Origin": "*"
-            }
-          }
-        )
+      ApiService.put(`customer/` + this.$props.customerCode, {
+        customer_code: this.$props.customerCode,
+        customer_name: this.customerName,
+        sex: this.sex,
+        age: this.age,
+        address: this.address
+      })
         .then(() => {
           this.$router.push({ name: "home" });
         })
         .catch(e => {
-          this.errors.push(e);
+          console.log("status:" + e.response.status);
+          this.$router.push({
+            name: "error",
+            params: { status: e.response.status }
+          });
         });
     },
     listCustomer: function() {
@@ -103,7 +100,7 @@ export default {
       default: "hello"
     },
     customerName: {
-      type: String,
+      type: String
     },
     sex: {
       type: String,
@@ -115,6 +112,16 @@ export default {
     },
     address: {
       type: String
+    }
+  },
+  computed: {
+    currentToken() {
+      return this.$store.state.auth.token;
+    }
+  },
+  mounted() {
+    if (!this.currentToken) {
+      this.$router.push({ name: "home" });
     }
   }
 };

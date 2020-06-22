@@ -1,10 +1,11 @@
 <template>
   <div class="text-center">
-    <v-pagination v-model="pagination" :length="lastPage" class="my-4" :total-visible="4" circle></v-pagination>
+    <v-pagination v-model="pagination" :length="lastPage" class="my-4" :total-visible="8"></v-pagination>
   </div>
 </template>
 <script>
 import Vue from "vue";
+import ApiService from "@/common/api.service";
 export default {
   data: () => ({
     pagination: null
@@ -21,40 +22,30 @@ export default {
   },
   watch: {
     pagination: {
-      handler(newVal, oldVal) {
-        if (newVal != oldVal) {
-          this.paginatePage(newVal);
-        }
+      handler(newVal) {
+        this.paginatePage(newVal);
       }
     }
   },
   computed: {
     lastPage: {
       get() {
-        if (this.$props.last < 6) {
-          return this.$props.last + 1;
-        } else {
-          return 6;
-        }
+        return this.$props.last + 1;
       }
     }
   },
   methods: {
     paginatePage(pageNumber) {
+      if (!this.$store.state.auth.token) {
+        console.log(this.$store.state.auth.token);
+        this.$router.push({ name: "login" });
+      }
       var pageSize = 3;
-      this.$axios
-        .get(
-          `http://localhost:8080/customer`,
+      ApiService.get(`customer`,
           {
             params: {
               size: pageSize,
               page: pageNumber - 1
-            }
-          },
-          {
-            headers: {
-              "Content-type": "application/json",
-              "Access-Control-Allow-Origin": "*"
             }
           }
         )
@@ -62,13 +53,25 @@ export default {
           var customerTemp = response.data;
           var recordIndex = (pageNumber - 1) * pageSize;
           for (let index = 0; index < customerTemp.customers.length; index++) {
-            Vue.set(customerTemp.customers[index], "no", recordIndex + index + 1);
+            Vue.set(
+              customerTemp.customers[index],
+              "no",
+              recordIndex + index + 1
+            );
           }
           this.$emit("childToParent", customerTemp.customers);
         })
         .catch(e => {
-          this.errors.push(e);
+          this.$router.push({
+            name: "error",
+            params: { status: e.response.status }
+          });
         });
+    }
+  },
+  mounted() {
+    if (!this.$store.state.auth.token) {
+      this.$router.push({ name: "login" });
     }
   }
 };

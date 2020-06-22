@@ -4,14 +4,18 @@ import VueRouter from 'vue-router'
 Vue.use(VueRouter)
 import App from './App.vue'
 import vuetify from '@/plugins/vuetify'
-import axios from 'axios'
 import router from './router';
+import Vuex from 'vuex';
+import store from '@/store';
+import VeeValidate from 'vee-validate';
 
+Vue.use(Vuex);
+Vue.use(VeeValidate);
 Vue.config.productionTip = false
-Vue.prototype.$axios = axios
+
 new Vue({
   router,
   vuetify,
-  axios,
+  store,
   render: h => h(App),
 }).$mount('#app')

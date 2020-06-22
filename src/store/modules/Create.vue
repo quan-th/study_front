@@ -44,14 +44,7 @@
       <v-row>
         <v-col cols="4" lg="4" style="padding:0"></v-col>
         <v-col cols="4" lg="4" style="padding:0">
-          <v-btn
-            class="ma-2"
-            outlined
-            normal
-            fab
-            color="indigo"
-            v-on:click="createCustomer"
-          >
+          <v-btn class="ma-2" outlined normal fab color="indigo" v-on:click="createCustomer">
             <v-icon>mdi-pencil</v-icon>
           </v-btn>
         </v-col>
@@ -66,11 +59,12 @@
 </template>
 
 <script>
+import ApiService from "@/common/api.service";
 export default {
   data: () => ({
     valid: false,
     name: "",
-    number:"",
+    number: "",
     address: "",
     nameRules: [
       v => !!v || "Name is required",
@@ -91,37 +85,38 @@ export default {
       return text;
     },
     createCustomer: function() {
-      this.$axios
-        .post(
-          `http://localhost:8080/customer`,
-          {
-            customer_code: this.rndStr(127),
-            customer_name: this.name,
-            sex: this.sex,
-            age: this.age,
-            address: this.address
-          },
-          {
-            headers: {
-              "Content-type": "application/json",
-              "Access-Control-Allow-Origin": "*"
-            }
-          }
-        )
+      ApiService.post(`customer`, {
+        customer_code: this.rndStr(127),
+        customer_name: this.name,
+        sex: this.sex,
+        age: this.age,
+        address: this.address
+      })
         .then(() => {
-          this.$router.push({ name: "home"});
+          this.$router.push({ name: "home" });
         })
         .catch(e => {
-          this.errors.push(e);
+          this.$router.push({
+            name: "error",
+            params: { status: e.response.status }
+          });
         });
     },
     listCustomer: function() {
-      this.$router.push({ name: "home"});
+      this.$router.push({ name: "home" });
     }
   },
   computed: {
     rndCode() {
       return this.rndStr(10);
+    },
+    currentToken() {
+      return this.$store.state.auth.token;
+    }
+  },
+  mounted() {
+    if (!this.currentToken) {
+      this.$router.push({ name: "login" });
     }
   }
 };

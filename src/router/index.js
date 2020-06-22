@@ -25,6 +25,17 @@ export default new Router({routes: [
         component: () => import("@/store/modules/Update"), 
         name:'update',
         props: true
+    },
+    {
+      path: '/login',
+      component: () => import("@/store/modules/Login"),
+      name: 'login'
+    },
+    {
+      path: '/error',
+      component: () => import("@/store/modules/Error"),
+      name: 'error',
+      props: true
     }
 ]});
 

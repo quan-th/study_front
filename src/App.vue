@@ -1,13 +1,31 @@
 <template>
   <div class="app">
-    <router-view></router-view>
+    <v-container>
+      <v-row style="float:right;">
+        <v-col>
+          <v-btn class="ma-2" outlined normal fab color="indigo" v-on:click="logOut">
+            <span class="v-btn__content">
+              <img src="@/assets/logout.png" />
+            </span>
+          </v-btn>
+        </v-col>
+      </v-row>
+    </v-container>
+    <div class="container">
+      <router-view />
+    </div>
   </div>
 </template>
 
 <script>
 export default {
   name: "App",
-  components: {
+  components: {},
+  methods: {
+    logOut() {
+      this.$store.dispatch("auth/logout");
+      this.$router.push({ name: "login" });
+    }
   }
 };
 </script>
